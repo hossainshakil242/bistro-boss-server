@@ -32,51 +32,81 @@ async function run() {
         const cartCollection = client.db('bistroDb').collection('carts');
 
         // users related api
-        app.get('/users',async(req,res)=>{
+        app.get('/users', async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
-        app.post('/users',async(req,res)=>{
+        app.post('/users', async (req, res) => {
             const user = req.body;
+            //inset email if user does not exists.
+            //you can do this may way(1. email unique, 2.upset 3. simple checking)
+
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already exists', insertedId: null });
+            }
             const result = await userCollection.insertOne(user);
             res.send(result);
         })
-        app.delete('/users/:id',async(req,res)=>{
+        app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    "role": "admin",
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params(id);
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    'role': 'admin',
+                },
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
             const result = await userCollection.deleteOne(query);
             res.send(result);
         })
 
         // menu related api
-        app.get('/menu', async(req,res)=>{
+        app.get('/menu', async (req, res) => {
             const menu = await menuCollection.find().toArray();
             res.send(menu);
         })
 
-        app.get('/reviews',async(req,res)=>{
+        app.get('/reviews', async (req, res) => {
             const reviews = await reviewCollection.find().toArray();
-            res.send(reviews); 
+            res.send(reviews);
         })
 
-        
+
         // carts collection
-        app.get('/carts',async(req,res)=>{
+        app.get('/carts', async (req, res) => {
             const email = req.query.email;
-            const query = {email:email};
+            const query = { email: email };
             const result = await cartCollection.find(query).toArray();
             res.send(result);
         })
 
-        app.post('/carts', async(req,res)=>{
+        app.post('/carts', async (req, res) => {
             const cartItem = req.body;
             const result = await cartCollection.insertOne(cartItem);
             res.send(result);
         })
 
-        app.delete('/carts/:id', async(req,res)=>{
-            const id = req.params.id;     
-            const query = {_id: new ObjectId(id)};
+        app.delete('/carts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
             const result = await cartCollection.deleteOne(query);
             res.send(result);
         })
