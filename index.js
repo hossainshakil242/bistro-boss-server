@@ -44,7 +44,7 @@ async function run() {
         const verifyToken = (req, res, next) => {
             console.log('inside token', req.headers.authorization);
             if (!req.headers.authorization) {
-                return res.status(401).send({ message: 'forbidden access' });
+                return res.status(401).send({ message: 'unauthorized access' });
             }
             const token = req.headers.authorization.split(' ')[1];
             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
@@ -122,6 +122,11 @@ async function run() {
         app.get('/menu', async (req, res) => {
             const menu = await menuCollection.find().toArray();
             res.send(menu);
+        })
+        app.post('/menu',verifyToken,verifyAdmin, async(req,res)=>{
+            const item = req.body;
+            const result = await menuCollection.insertOne(item);
+            res.send(result);
         })
 
         app.get('/reviews', async (req, res) => {
